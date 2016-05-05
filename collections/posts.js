@@ -33,7 +33,9 @@ Meteor.methods({
             userId: user._id,
             author: user.username,
             submitted: new Date().getTime(),
-            commentsCount: 0
+            commentsCount: 0,
+            upvoters: [],
+            votes: 0
         });
 
         var postId = Posts.insert(post);
@@ -41,6 +43,22 @@ Meteor.methods({
         return {
           _id: postId
         };
+
+    },
+
+    upvote: function(postId) {
+        var user = Meteor.user();
+        if(!user)
+            throw new Meteor.Error(401, "You need to login to upvote");
+
+        // Faz o upddate se encontrar um post com esse id onde o usuário ainda não votou ($ne)
+        Posts.update({
+            _id: postId,
+            upvoters: {$ne: user._id}
+        }, {
+            $addToSet: {upvoters: user._id},
+            $inc: {votes: 1}
+        });
 
     }
 });
